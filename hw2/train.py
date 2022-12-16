@@ -1,4 +1,5 @@
 import torch
+from torch.utils.data import DataLoader
 import torchvision
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 from torchvision.models.detection.mask_rcnn import MaskRCNNPredictor
@@ -46,4 +47,6 @@ if __name__ == '__main__':
     model = model.to(device)
     optimizer = torch.optim.AdamW(model.parameters(),learning_rate)
     loss_func = IoULoss()
-    train_set = Image_dataset(path,transform)
+    train_set = Image_dataset(path, transform)
+    train_loader = DataLoader(train_set, batch_size, shuffle=True)
+    training(model,train_loader, epoch, loss_func, optimizer, device)
