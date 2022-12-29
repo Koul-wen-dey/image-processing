@@ -6,10 +6,10 @@ from torchvision.models.detection.mask_rcnn import MaskRCNNPredictor
 from mydataset import Image_dataset
 import torchvision.transforms as T
 from tqdm import tqdm
-from myloss import IoULoss
+from myloss import IoU
 from sklearn.model_selection import KFold,StratifiedKFold
 from ranger import Ranger
-
+from torch.optim import lr_scheduler
 
 def my_collate_fn(batch):
     return tuple(zip(*batch))
@@ -36,6 +36,16 @@ def training(model, dataloader, optimizer, device,e):
 
     return total_loss.item()
 
+def validation(model, dataloader, device, idx):
+    model.eval()
+    loss = 0
+    with torch.no_grad():
+        for img, targets in dataloader:
+            img = [i.to(device) for i in img]
+            targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
+            output = model(img)
+            torch.cuda.empty_cache()
+    print(f'model_{idx} loss : {loss}')
 
 
 device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
@@ -45,7 +55,7 @@ learning_rate = 1.0e-3
 epoch = 40
 mean, std = 0.5557, 0.2051
 hidden_layer = 256
-path = './class_data/Train/*/'
+path = './class_data/Train'
 size = (350,350)
 transform = T.Compose([T.Resize(size)])
 kf = KFold(n_splits=4,shuffle=True,random_state=1)
@@ -55,28 +65,33 @@ kf2 = StratifiedKFold(n_splits=4,shuffle=True,random_state=1)
 if __name__ == '__main__':
     train_set = Image_dataset(path, transform=transform)
     for idx, (train_id, valid_id) in enumerate(kf2.split(train_set,train_set.l)):
-        # if idx == 0:
-        #     continue
         
         new_loss = float('inf')
         model = torchvision.models.detection.maskrcnn_resnet50_fpn(num_classes=4)
-        # in_features = model.roi_heads.box_predictor.cls_score.in_features
-        # model.roi_heads.box_predictor = FastRCNNPredictor(in_features, num_classes)
-        # in_features_mask = model.roi_heads.mask_predictor.conv5_mask.in_channels
-        # model.roi_heads.mask_predictor = MaskRCNNPredictor(in_features_mask,hidden_layer,num_classes)
         
-        # if idx == 1:
         # model.load_state_dict(torch.load(f'./models/mask_rcnn_{idx}.pt')['model_state_dict'])
         model = model.to(device)
         optimizer = Ranger(model.parameters(),lr=learning_rate)
-        
+        sc = lr_scheduler.StepLR(optimizer,10)
         train_sample = SubsetRandomSampler(train_id)
         valid_sample = SubsetRandomSampler(valid_id)
         train_loader = DataLoader(train_set,batch_size=batch_size,collate_fn=my_collate_fn,sampler=train_sample,shuffle=False)
         valid_loader = DataLoader(train_set,batch_size=batch_size,collate_fn=my_collate_fn,sampler=valid_sample,shuffle=False)
+        history = []
+
+        # Training phase
         for e in range(epoch):
             total_loss = training(model,train_loader,optimizer,device,e)
+            history.append(total_loss)
             if total_loss < new_loss:
                 new_loss = total_loss
                 torch.save({'model_state_dict':model.state_dict()},f'./models/mask_rcnn_{idx}.pt')
                 print('save checkpoint')
+            sc.step()
+        with open(f'./log/loss_{idx}.txt','w') as f:
+            for his in history:
+                f.write(str(his)+'\n')
+            f.close()
+
+        # Validation phase
+        # validation(model,valid_loader,device,idx)

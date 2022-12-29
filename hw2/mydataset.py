@@ -1,19 +1,18 @@
 from torch.utils.data import Dataset
 from glob import glob
 import os
-# from PIL import Image
 from torchvision.io import read_image, ImageReadMode
 import torchvision.transforms as T
 import torchvision.transforms.functional as F
 import json
 import torch
-# from PIL.ImageMath import float
-# import matplotlib.pyplot as plt
+
 
 class Image_dataset(Dataset):
     def __init__(self,data_path,transform=None):
         super().__init__()
         self.transform = transform
+        data_path += '/*/'
         self.img_path = glob(os.path.join(data_path,'image/*.png'))
         self.label_path = glob(os.path.join(data_path,'label/*.json'))
         self.mask_path = glob(os.path.join(data_path,'mask/*.png'))
@@ -29,6 +28,7 @@ class Image_dataset(Dataset):
                 self.l.append(3)
             else:
                 self.l.append(0)
+        # print(self.img_path)
 
     def __getitem__(self, index):
         img = read_image(self.img_path[index],ImageReadMode.RGB)
@@ -86,10 +86,6 @@ class Image_dataset(Dataset):
                 t[1] = t[1] / height * img.shape[-1]
                 t[3] = t[3] / height * img.shape[-1]
             target['area'] = (target['boxes'][:, 3] - target['boxes'][:, 1]) * (target['boxes'][:, 2] - target['boxes'][:, 0])
-            # print(target['boxes'].shape)
-            # print(target['area'].shape)
-
-
         return img, target
     
     def __len__(self):
@@ -97,7 +93,7 @@ class Image_dataset(Dataset):
 
 
 if __name__ == '__main__':
-    path = './class_data/Train/*/'
+    path = './class_data/Train'
     trans = T.Compose([T.Resize((256,256))])
     a = Image_dataset(path,trans)
     # print(a.l)
