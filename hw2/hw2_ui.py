@@ -83,6 +83,9 @@ class Ui_MainWindow(object):
         self.fps = QtWidgets.QLabel(self.centralwidget)
         self.fps.setGeometry(QtCore.QRect(890, 330, 191, 16))
         self.fps.setObjectName("label")
+        self.label_2 = QtWidgets.QLabel(self.centralwidget)
+        self.label_2.setGeometry(QtCore.QRect(890, 580, 181, 16))
+        self.label_2.setObjectName("label_2")
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 1127, 21))
@@ -102,12 +105,12 @@ class Ui_MainWindow(object):
         self.show_result.setText(_translate("MainWindow", "Detection and Segmentation"))
         self.label_4.setText(_translate("MainWindow", "Original Image"))
         self.label_5.setText(_translate("MainWindow", "Detection Result"))
-        self.label_6.setText(_translate("MainWindow", "Segmentation Result"))
+        self.label_6.setText(_translate("MainWindow", "Segamentation Result"))
         self.cur_img.setText(_translate("MainWindow", "Current Image: "))
         self.img_name.setText(_translate("MainWindow", "Image Name: "))
         self.gt.setText(_translate("MainWindow", "GT: "))
         self.pred.setText(_translate("MainWindow", "Prediction: "))
-        self.iou.setText(_translate("MainWindow", "IoU: "))
+        self.iou.setText(_translate("MainWindow", "Average IoU: "))
         self.dc.setText(_translate("MainWindow", "Dice Coefficient: "))
         self.label_10.setText(_translate("MainWindow", "Folder Mean Evaluation Metric"))
         self.ap_uc.setText(_translate("MainWindow", "AP50(uncover): "))
@@ -116,6 +119,7 @@ class Ui_MainWindow(object):
         self.previous.setText(_translate("MainWindow", "Previous"))
         self.next.setText(_translate("MainWindow", "Next"))
         self.fps.setText(_translate("MainWindow", "FPS: "))
+        self.label_2.setText(_translate("MainWindow", "Average Dice Coefficient: "))
 
 
 if __name__ == "__main__":

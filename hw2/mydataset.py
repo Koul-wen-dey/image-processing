@@ -13,6 +13,7 @@ class Image_dataset(Dataset):
         super().__init__()
         self.transform = transform
         data_path += '/*/'
+        # data_path += '/'
         self.img_path = glob(os.path.join(data_path,'image/*.png'))
         self.label_path = glob(os.path.join(data_path,'label/*.json'))
         self.mask_path = glob(os.path.join(data_path,'mask/*.png'))
@@ -61,23 +62,25 @@ class Image_dataset(Dataset):
             x2, y2 = int(torch.round(b[2]).item()), int(torch.round(b[3]).item())
             tmp[y1:y2, x1:x2] = 1
             mask_list.append(torch.where(mask[0] > 0, tmp, 0))
-        mask = torch.tensor([m.tolist() for m in mask_list],dtype=torch.uint8)
+        masks = torch.tensor([m.tolist() for m in mask_list],dtype=torch.uint8)
         # print(mask.shape)
-        (height, width) = mask.shape[1:]
+        (height, width) = masks.shape[1:]
         # print(height, width)
         target = {
-            'masks':mask,
+            'masks':masks,
             'boxes':boxes,
             'labels':torch.tensor(label_t,dtype=torch.int64),
             'area':(boxes[:, 3] - boxes[:, 1]) * (boxes[:, 2] - boxes[:, 0]),
             'image_id':torch.tensor([index]),
-            'iscrowd':torch.zeros((num_ids,),dtype=torch.uint8)
+            'iscrowd':torch.zeros((num_ids,),dtype=torch.uint8),
+            'backup':mask
         }
         
         if self.transform is not None:
             img = self.transform(img)
             mask_resize = T.Resize((img.shape[-1],img.shape[-1]),interpolation=T.InterpolationMode.NEAREST)
             target['masks'] = mask_resize(target['masks'])
+            target['backup'] = mask_resize(target['backup'])
 
             # print(img.shape, target['masks'].shape)
             for t in target['boxes']:

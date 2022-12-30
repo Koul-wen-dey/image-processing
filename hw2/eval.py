@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 from torchvision.io import read_image,ImageReadMode
 import torchvision.transforms.functional as F
 from torchvision.utils import draw_bounding_boxes
-from torchvision.ops import nms
+from torchvision.ops import nms, box_iou
 
 def eval(model,):
     pass
@@ -23,7 +23,7 @@ if __name__ == '__main__':
 
 
     count = 0
-    check = torch.load('./models/mask_rcnn_0.pt')
+    check = torch.load('./models/mask_rcnn_4.pt')
     # check = torch.load('./backup/mask_rcnn_0.pt')
     model.load_state_dict(check['model_state_dict'])
     model = model.to(device)
@@ -32,19 +32,17 @@ if __name__ == '__main__':
     model.eval()
     with torch.no_grad():
         # for img, targets in test_loader:
-        img = read_image('./class_data/Val/scratch/image/Converted_ 3138.png',ImageReadMode.RGB)
+        img = read_image('./class_data/Val/powder_uncover/image/converted_ 0351.png',ImageReadMode.RGB)
         img2 = F.convert_image_dtype(img,dtype=torch.float32)
         img2 = transform(img2)
         img2 = [img2.to(device)]
         output = model(img2)
         output = output[0]
-        # print(output)
-        # exit()
-        # print(torch.unique(output['masks']))
+        
         tmp = output['masks'][0].shape
         M = torch.zeros(tmp,dtype=torch.uint8)
         for a in output['masks']:
-            M[torch.where(a>0.6)] = 255
+            M[torch.where(a>0.9)] = 255
         table = {0:'background',1:'uncover',2:'uneven',3:'scratch'}
         indexes = nms(output['boxes'],output['scores'],0.09)
         labels = [table[i.item()] for i in output['labels'][indexes]]

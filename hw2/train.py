@@ -6,7 +6,7 @@ from torchvision.models.detection.mask_rcnn import MaskRCNNPredictor
 from mydataset import Image_dataset
 import torchvision.transforms as T
 from tqdm import tqdm
-from myloss import IoU
+from mymetrics import IoU
 from sklearn.model_selection import KFold,StratifiedKFold
 from ranger import Ranger
 from torch.optim import lr_scheduler
